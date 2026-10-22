@@ -8,4 +8,16 @@ declare global {
   }
 }
 
+declare module "express-serve-static-core" {
+  interface Request {
+    user?: authPayload;
+  }
+}
+
+declare module "express" {
+  interface Request {
+    user?: authPayload;
+  }
+}
+
 export {};

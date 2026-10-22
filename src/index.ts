@@ -1,3 +1,4 @@
+/// <reference path="./types/express.d.ts" />
 import "dotenv/config";
 import express from "express";
 import cookieParser from "cookie-parser";
@@ -24,7 +25,11 @@ app.use(globalErrorHandler);
 
 connectDB();
 
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});
+if (!process.env.VERCEL) {
+  app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+  });
+}
+
+export default app;
 

@@ -1,3 +1,4 @@
+/// <reference path="../types/express.d.ts" />
 import type { NextFunction, Request, Response } from "express";
 import type { IRole } from "../database/schema/user/interface.js";
 import httpStatus from "http-status";

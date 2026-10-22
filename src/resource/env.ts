@@ -4,7 +4,8 @@ config();
 const envData = z.object({
   Server_Port: z.coerce
     .number({ error: "Server port is required" })
-    .min(1000, "4 Digit server port is required"),
+    .min(1000, "4 Digit server port is required")
+    .optional(),
   DATABASE_URL: z.string().min(10, "Database url is required"),
   CLIENT_URL: z.string().min(10, "Client url is required"),
   NODE_ENV: z.enum(["development", "production"]),

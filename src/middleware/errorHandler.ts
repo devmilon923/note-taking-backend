@@ -19,7 +19,6 @@ export default function globalErrorHandler(
       const response = ZodErrorHandler(err);
       return SendError(res, httpStatus.BAD_REQUEST, response);
     }
-
     const statusCode = err.statusCode || httpStatus.INTERNAL_SERVER_ERROR;
     const response = CommonErrorHandler(err);
     return SendError(res, statusCode, response);

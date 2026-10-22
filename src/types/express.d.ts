@@ -1,4 +1,4 @@
-import type { authPayload } from "../database/schema/user/validation.js";
+import type { authPayload } from "../database/schema/user/interface.js";
 
 declare global {
   namespace Express {

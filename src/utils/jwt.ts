@@ -1,4 +1,4 @@
-import type { authPayload } from "../database/schema/user/validation.js";
+import type { authPayload } from "../database/schema/user/interface.js";
 import envManager from "../resource/env.js";
 import jwt from "jsonwebtoken";
 import apiError from "./apiError.js";

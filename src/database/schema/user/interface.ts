@@ -7,3 +7,11 @@ export type authPayload = {
   email: string;
   role: IRole;
 } & JwtPayload;
+
+export type IUser = Document & {
+  name: string;
+  email: string;
+  password: string;
+  role: IRole;
+  isDeleted: boolean;
+};

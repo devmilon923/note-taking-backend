@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
-import type { IRole } from "../database/schema/user/validation.js";
+import type { IRole } from "../database/schema/user/interface.js";
 import httpStatus from "http-status";
 import apiError from "../utils/apiError.js";
 import JWTService from "../utils/jwt.js";

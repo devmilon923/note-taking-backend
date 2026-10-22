@@ -27,6 +27,10 @@ const userSchema = new Schema<IUser>(
       default: false,
       select: false,
     },
+    interests: {
+      type: String,
+      enum: ["chess", "coding", "swimming", "reading"],
+    },
   },
   { timestamps: true },
 );

@@ -14,4 +14,5 @@ export type IUser = Document & {
   password: string;
   role: IRole;
   isDeleted: boolean;
+  interests: "chess" | "coding" | "swimming" | "reading";
 };

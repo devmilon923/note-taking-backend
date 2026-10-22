@@ -77,7 +77,7 @@ export class NoteService {
     const [totalData, notes] = await Promise.all([
       Notes.countDocuments(filter),
       Notes.find(filter)
-        .sort({ createdAt: -1, _id: -1 })
+        .sort({ createdAt: -1, isDeleted: 1 })
         .skip(skip)
         .limit(limit)
         .lean(),

@@ -30,12 +30,16 @@ const noteSchema = new Schema<INotes>(
   { timestamps: true },
 );
 
-// Compound index to support efficient paginated note retrieval by user
+// User-specific note pagination (newest first)
 noteSchema.index({ author: 1, isDeleted: 1, createdAt: -1 });
-// Compound index to support efficient paginated note retrieval for admin / cross-user queries
+
+// Admin cross-user note pagination (newest first)
 noteSchema.index({ isDeleted: 1, createdAt: -1 });
-// Indexes to support fast case-insensitive title search
-noteSchema.index({ isDeleted: 1, title: 1 });
+
+// User-specific title prefix search
 noteSchema.index({ author: 1, isDeleted: 1, title: 1 });
+
+// Admin cross-user title prefix search
+noteSchema.index({ isDeleted: 1, title: 1 });
 
 export const Notes = models.Notes || model<INotes>("Notes", noteSchema);

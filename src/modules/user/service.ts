@@ -301,7 +301,7 @@ export class UserService {
     const [totalData, users] = await Promise.all([
       User.countDocuments(filter),
       User.find(filter)
-        .sort({ createdAt: -1, _id: -1 })
+        .sort({ createdAt: -1, isDeleted: 1 })
         .skip(skip)
         .limit(limit)
         .lean(),

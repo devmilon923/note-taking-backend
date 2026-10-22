@@ -7,7 +7,13 @@ import JWTService from "../utils/jwt.js";
 
 export default function authCheck(roles: (IRole | "all")[]) {
   return (req: Request, res: Response, next: NextFunction) => {
-    const token = req.cookies?.accessToken || null;
+    const authHeader = req.headers.authorization;
+    const bearerToken =
+      authHeader && authHeader.startsWith("Bearer ")
+        ? authHeader.split(" ")[1]
+        : null;
+
+    const token = req.cookies?.accessToken || bearerToken || null;
     if (!token) {
       throw apiError(httpStatus.UNAUTHORIZED, "Authentication token required");
     }

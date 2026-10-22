@@ -10,7 +10,7 @@ const isProduction = env.NODE_ENV === "production";
 export const authCookieOptions: CookieOptions = {
   httpOnly: true,
   secure: isProduction,
-  sameSite: "strict",
+  sameSite: isProduction ? "none" : "lax",
   path: "/",
   maxAge: 7 * 24 * 60 * 60 * 1000,
 };
@@ -18,7 +18,7 @@ export const authCookieOptions: CookieOptions = {
 export const clearAuthCookieOptions: CookieOptions = {
   httpOnly: true,
   secure: isProduction,
-  sameSite: "strict",
+  sameSite: isProduction ? "none" : "lax",
   path: "/",
 };
 
@@ -36,7 +36,10 @@ export class AuthHandler {
     res.cookie("accessToken", result.token, authCookieOptions);
     return SendSuccess(res, httpStatus.OK, {
       message: "User logged in successfully",
-      data: result.user,
+      data: {
+        ...result.user,
+        token: result.token,
+      },
     });
   }
 

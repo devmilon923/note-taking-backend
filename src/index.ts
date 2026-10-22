@@ -12,9 +12,25 @@ const env = envManager();
 const app = express();
 const port = env.Server_Port;
 
+// Enable trust proxy for Vercel/reverse proxy HTTPS detection
+app.set("trust proxy", 1);
+
+const clientUrl = env.CLIENT_URL.replace(/\/$/, "");
+
 app.use(
   cors({
-    origin: env.CLIENT_URL as string,
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      const normalized = origin.replace(/\/$/, "");
+      if (
+        normalized === clientUrl ||
+        normalized === "http://localhost:3000" ||
+        normalized === "http://localhost:5173"
+      ) {
+        return callback(null, true);
+      }
+      return callback(null, true);
+    },
     credentials: true,
   }),
 );

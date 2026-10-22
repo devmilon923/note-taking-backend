@@ -76,6 +76,21 @@ npm start
 
 ---
 
+### 5. Automatic Database Seeding & Demo Accounts
+
+Default demo accounts are **handled automatically upon server startup** — **no manual `npm run seed` command is needed**.
+
+Whenever the server starts, it automatically provisions or updates the default seed accounts:
+
+| Role       | Email                                            | Password    | Permissions                                  |
+| ---------- | ------------------------------------------------ | ----------- | -------------------------------------------- |
+| **Admin**  | `admin@example.com` _(or `admin@gmail.com`)_     | `password2` | Full system access, all notes, user CRUD     |
+| **User**   | `user@example.com` _(or `user@gmail.com`)_       | `password2` | Standard user access, own notes management   |
+
+> **Note**: An optional manual script `npm run seed` is also available if you ever want to re-seed standalone.
+
+---
+
 ## 🔒 Authentication Flow Overview
 
 - **Authentication Method**: JWT stored in an `httpOnly`, `sameSite`, and `secure` (in production) cookie named `accessToken`.

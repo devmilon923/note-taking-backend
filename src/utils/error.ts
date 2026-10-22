@@ -12,7 +12,7 @@ export function ZodErrorHandler(err: ZodError) {
 
 export function CommonErrorHandler(err: any) {
   return {
-    message: err.message,
-    data: err,
+    message: err.message || "Internal server error",
+    data: err.errorDetails || null,
   };
 }

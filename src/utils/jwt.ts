@@ -11,10 +11,10 @@ export default class JWTService {
     refresh: string;
   } {
     const access = jwt.sign(data, this.jwtSecret, {
-      expiresIn: "1m",
+      expiresIn: "7d",
     });
     const refresh = jwt.sign(data, this.jwtSecret, {
-      expiresIn: "1d",
+      expiresIn: "7d",
     });
     return { access, refresh };
   }
@@ -24,7 +24,7 @@ export default class JWTService {
       const payload = jwt.verify(token, this.jwtSecret) as authPayload;
       return payload;
     } catch (error) {
-      throw apiError(httpStatus.UNAUTHORIZED, "UNAUTHORIZED");
+      throw apiError(httpStatus.UNAUTHORIZED, "Invalid or expired token");
     }
   }
 }

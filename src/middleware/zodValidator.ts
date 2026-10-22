@@ -14,6 +14,7 @@ export function zodValidator(schema: ZodSchema) {
         data: fieldErrors,
       });
     }
+    req.body = result.data;
     next();
   };
 }

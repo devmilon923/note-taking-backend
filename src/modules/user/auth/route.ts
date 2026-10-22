@@ -13,5 +13,9 @@ router
   .route("/login")
   .post(zodValidator(authValidation.loginValidation), AuthHandler.login);
 
+router
+  .route("/logout")
+  .post(AuthHandler.logout);
+
 const AuthRoutes = router;
 export default AuthRoutes;

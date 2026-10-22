@@ -16,15 +16,13 @@ const port = env.Server_Port || 3001;
 // Enable trust proxy for Vercel/reverse proxy HTTPS detection
 app.set("trust proxy", 1);
 
-const clientUrl = env.CLIENT_URL.replace(/\/$/, "");
-
 app.use(
   cors({
     origin: env.CLIENT_URL as string,
     credentials: true,
   }),
 );
-connectDB();
+
 app.get("/health", (req, res) => {
   res.json({
     message: "OK",
@@ -40,6 +38,7 @@ app.use(globalErrorHandler);
 
 if (!process.env.VERCEL) {
   app.listen(port, async () => {
+    await connectDB();
     await seedDatabase();
     console.log(`Server is running on port ${port}`);
   });

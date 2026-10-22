@@ -23,6 +23,8 @@ app.use(
   }),
 );
 
+connectDB();
+
 app.get("/health", (req, res) => {
   res.json({
     message: "OK",
@@ -33,6 +35,13 @@ app.get("/health", (req, res) => {
 });
 app.use(cookieParser());
 app.use(express.json());
+
+// Ensure database connection is established before handling requests (required for Vercel serverless)
+app.use(async (req, res, next) => {
+  await connectDB();
+  next();
+});
+
 app.use(appRouters);
 app.use(globalErrorHandler);
 

@@ -24,13 +24,19 @@ app.use(
 );
 
 connectDB();
-
+app.get("/", (req, res) => {
+  res.json({
+    message:
+      "The server is running, and the API documentation is available in the project’s README file on GitHub.",
+    status: "success",
+    statusCode: 200,
+  });
+});
 app.get("/health", (req, res) => {
   res.json({
     message: "OK",
     status: "success",
     statusCode: 200,
-    origin: env.CLIENT_URL,
   });
 });
 app.use(cookieParser());

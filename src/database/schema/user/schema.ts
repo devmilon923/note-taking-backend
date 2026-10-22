@@ -32,11 +32,17 @@ const userSchema = new Schema<IUser>(
       select: false,
     },
     interests: {
-      type: String,
-      enum: ["chess", "coding", "swimming", "reading"],
+      type: [String],
+      default: [],
+      enum: ["chess", "coding", "music", "travel"],
     },
   },
   { timestamps: true },
 );
+
+// Explicit schema index declarations
+userSchema.index({ email: 1 }, { unique: true });
+userSchema.index({ isDeleted: 1, createdAt: -1 });
+userSchema.index({ interests: 1 });
 
 export const User = models.User || model<IUser>("User", userSchema);

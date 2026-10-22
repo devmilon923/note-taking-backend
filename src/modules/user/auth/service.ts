@@ -22,6 +22,7 @@ export class AuthService {
     name: string;
     email: string;
     password: string;
+    interests?: Array<"chess" | "coding" | "music" | "travel">;
   }) {
     const normalizedEmail = payload.email.toLowerCase().trim();
 
@@ -36,6 +37,7 @@ export class AuthService {
       name: payload.name.trim(),
       email: normalizedEmail,
       password: hashedPassword,
+      interests: payload.interests || [],
       role: "user",
     });
 

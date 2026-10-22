@@ -7,7 +7,9 @@ const router = Router();
 export const appRouters = [
   { path: "/auth", handler: AuthRoutes },
   { path: "/user", handler: UserRoute },
+  { path: "/users", handler: UserRoute },
   { path: "/note", handler: NoteRoutes },
+  { path: "/notes", handler: NoteRoutes },
 ];
 
 appRouters.forEach(({ path, handler }) => {

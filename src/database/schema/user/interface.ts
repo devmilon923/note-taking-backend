@@ -18,8 +18,7 @@ export interface IUser extends Document {
   password: string;
   role: IRole;
   isDeleted: boolean;
-  interests?: "chess" | "coding" | "swimming" | "reading";
+  interests?: Array<"chess" | "coding" | "music" | "travel">;
   createdAt?: Date;
   updatedAt?: Date;
 }
-

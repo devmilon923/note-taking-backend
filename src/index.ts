@@ -18,6 +18,9 @@ app.use(
     credentials: true,
   }),
 );
+app.get("/health", (req, res) => {
+  res.send("OK");
+});
 app.use(cookieParser());
 app.use(express.json());
 app.use(appRouters);
@@ -32,4 +35,3 @@ if (!process.env.VERCEL) {
 }
 
 export default app;
-

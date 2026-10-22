@@ -10,7 +10,7 @@ const isProduction = env.NODE_ENV === "production";
 export const authCookieOptions: CookieOptions = {
   httpOnly: true,
   secure: isProduction,
-  sameSite: isProduction ? "none" : "lax",
+  sameSite: "strict",
   path: "/",
   maxAge: 7 * 24 * 60 * 60 * 1000,
 };
@@ -18,7 +18,7 @@ export const authCookieOptions: CookieOptions = {
 export const clearAuthCookieOptions: CookieOptions = {
   httpOnly: true,
   secure: isProduction,
-  sameSite: isProduction ? "none" : "lax",
+  sameSite: "strict",
   path: "/",
 };
 

@@ -10,14 +10,15 @@ import envManager from "./resource/env.js";
 
 const env = envManager();
 const app = express();
-const port = env.Server_Port || 3001;
+const port = env.Server_Port;
 
 app.use(
   cors({
-    origin: env.CLIENT_URL,
+    origin: env.CLIENT_URL as string,
     credentials: true,
   }),
 );
+connectDB();
 app.get("/health", (req, res) => {
   res.json({
     message: "OK",
@@ -30,8 +31,6 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(appRouters);
 app.use(globalErrorHandler);
-
-connectDB();
 
 if (!process.env.VERCEL) {
   app.listen(port, () => {

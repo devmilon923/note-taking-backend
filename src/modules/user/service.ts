@@ -264,14 +264,39 @@ export class UserService {
     return getSafeUserData(user);
   }
 
-  public static async adminGetUsers(pagination: {
-    page: number;
-    limit: number;
-  }) {
-    const { page, limit } = pagination;
+  public static async adminGetUsers(options: {
+    page?: number;
+    limit?: number;
+    role?: IRole | string;
+    searchQ?: string;
+    pagination?: { page: number; limit: number };
+    filters?: { role?: IRole | string; searchQ?: string };
+  } = {}) {
+    const page = options.pagination?.page ?? options.page ?? 1;
+    const limit = options.pagination?.limit ?? options.limit ?? 10;
+    const role = options.filters?.role ?? options.role;
+    const rawSearch = options.filters?.searchQ ?? options.searchQ;
+
     const skip = (page - 1) * limit;
 
-    const filter = { isDeleted: false };
+    const filter: Record<string, any> = { isDeleted: false };
+
+    // Filter by role if specified and not 'all'
+    if (role && role !== "all") {
+      filter.role = role;
+    }
+
+    // Case-insensitive search on name OR email
+    if (rawSearch && typeof rawSearch === "string") {
+      const searchQ = rawSearch.trim();
+      if (searchQ.length > 0) {
+        const escaped = searchQ.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        filter.$or = [
+          { name: { $regex: escaped, $options: "i" } },
+          { email: { $regex: escaped, $options: "i" } },
+        ];
+      }
+    }
 
     const [totalData, users] = await Promise.all([
       User.countDocuments(filter),
@@ -289,6 +314,9 @@ export class UserService {
       pagination: paginationMeta,
     };
   }
+
+  // Alias for semantic clarity
+  public static adminFilterUsers = UserService.adminGetUsers;
 
   public static async adminGetUserById(userId: string) {
     if (!mongoose.Types.ObjectId.isValid(userId)) {

@@ -3,12 +3,16 @@ import authCheck from "../../middleware/authCheck.js";
 import { zodValidator } from "../../middleware/zodValidator.js";
 import { NoteHandler } from "./handler.js";
 import { noteValidation } from "./validation.js";
-import { UserHandler } from "../user/handler.js";
 
 const router = Router();
 
 // Protect all note routes with authentication
 router.use(authCheck(["all"]));
+
+// Search notes alias endpoint
+router
+  .route("/search")
+  .get(NoteHandler.getNotes);
 
 router
   .route("/")
@@ -17,7 +21,6 @@ router
     NoteHandler.createNote,
   )
   .get(NoteHandler.getNotes);
-
 
 router
   .route("/:id")

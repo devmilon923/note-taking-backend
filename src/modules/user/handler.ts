@@ -95,18 +95,27 @@ export class UserHandler {
   }
 
   public static async adminGetUsers(req: Request, res: Response) {
-    const queryResult = userValidation.paginationValidation.safeParse(req.query);
+    const queryResult =
+      userValidation.adminGetUsersQueryValidation.safeParse(req.query);
     if (!queryResult.success) {
       const formattedErrors = queryResult.error.format();
       const { _errors, ...fieldErrors } = formattedErrors;
       return SendError(res, httpStatus.BAD_REQUEST, {
-        message: "Invalid pagination parameters",
+        message: "Invalid query parameters",
         data: fieldErrors,
       });
     }
 
-    const { page, limit } = queryResult.data;
-    const result = await UserService.adminGetUsers({ page, limit });
+    const { page, limit, role } = queryResult.data;
+    const searchQ = queryResult.data.searchQ || queryResult.data.search;
+
+    const result = await UserService.adminGetUsers({
+      pagination: { page, limit },
+      filters: {
+        role: role === "all" ? undefined : role,
+        searchQ,
+      },
+    });
 
     return SendSuccess(res, httpStatus.OK, {
       message: "Users retrieved successfully",
@@ -114,6 +123,9 @@ export class UserHandler {
       pagination: result.pagination,
     });
   }
+
+  // Alias for semantic clarity
+  public static adminFilterUsers = UserHandler.adminGetUsers;
 
   public static async adminGetUserById(req: Request, res: Response) {
     const userId = req.params.id as string;

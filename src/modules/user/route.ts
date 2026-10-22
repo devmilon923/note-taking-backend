@@ -31,6 +31,11 @@ router
   .route("/notes/:id")
   .get(authCheck(["admin"]), UserHandler.getUserNotesWithLookup);
 
+// Admin user management: Filter and search users
+router
+  .route("/filter")
+  .get(authCheck(["admin"]), UserHandler.adminGetUsers);
+
 // Admin user management: List all users & Create new user
 router
   .route("/")

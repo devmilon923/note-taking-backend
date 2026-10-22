@@ -46,9 +46,41 @@ const paginationValidation = z.object({
   limit: z.coerce.number().int().min(1, "Limit must be at least 1").max(100, "Limit cannot exceed 100").default(10),
 });
 
+const adminGetUsersQueryValidation = z.object({
+  page: z.coerce.number().int().min(1, "Page must be at least 1").default(1),
+  limit: z.coerce
+    .number()
+    .int()
+    .min(1, "Limit must be at least 1")
+    .max(100, "Limit cannot exceed 100")
+    .default(10),
+  role: z
+    .preprocess(
+      (val) => (typeof val === "string" ? val.trim().toLowerCase() || undefined : val),
+      z.enum(["admin", "user", "all"], {
+        error: "Role filter must be 'admin', 'user', or 'all'",
+      }),
+    )
+    .optional(),
+  searchQ: z
+    .preprocess(
+      (val) => (typeof val === "string" ? val.trim() || undefined : val),
+      z.string().optional(),
+    )
+    .optional(),
+  search: z
+    .preprocess(
+      (val) => (typeof val === "string" ? val.trim() || undefined : val),
+      z.string().optional(),
+    )
+    .optional(),
+});
+
 export const userValidation = {
   updateProfileValidation,
   adminCreateUserValidation,
   adminUpdateUserValidation,
   paginationValidation,
+  adminGetUsersQueryValidation,
+  filterUsersValidation: adminGetUsersQueryValidation,
 };

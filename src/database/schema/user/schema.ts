@@ -43,6 +43,8 @@ const userSchema = new Schema<IUser>(
 // Explicit schema index declarations
 userSchema.index({ email: 1 }, { unique: true });
 userSchema.index({ isDeleted: 1, createdAt: -1 });
+userSchema.index({ isDeleted: 1, role: 1 });
+userSchema.index({ name: 1 });
 userSchema.index({ interests: 1 });
 
 export const User = models.User || model<IUser>("User", userSchema);

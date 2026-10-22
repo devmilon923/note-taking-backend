@@ -107,13 +107,13 @@ All responses follow a consistent standard response wrapper:
 | **User Profile**     | `GET`           | `/user/profile`                                 | Authenticated (`user` / `admin`) | Retrieve authenticated user's profile                                 |
 | **User Profile**     | `PATCH` / `PUT` | `/user/profile`                                 | Authenticated (`user` / `admin`) | Update authenticated user's name & interests                          |
 | **Notes CRUD**       | `POST`          | `/notes` _(alias: `/note`)_                     | Authenticated (`user` / `admin`) | Create a new note (author set from verified token)                    |
-| **Notes CRUD**       | `GET`           | `/notes` _(alias: `/note`)_                     | Authenticated (`user` / `admin`) | List notes with pagination (User: own notes; Admin: all notes)        |
+| **Notes CRUD**       | `GET`           | `/notes` _(aliases: `/note`, `/notes/search`, `/note/search`)_ | Authenticated (`user` / `admin`) | List & search notes by title (case-insensitive title search; User: own; Admin: all) |
 | **Notes CRUD**       | `GET`           | `/notes/:id` _(alias: `/note/:id`)_             | Authenticated (`user` / `admin`) | Get single note by ID (User: own; Admin: any)                         |
 | **Notes CRUD**       | `PATCH` / `PUT` | `/notes/:id` _(alias: `/note/:id`)_             | Authenticated (`user` / `admin`) | Update note title / content (User: own; Admin: any)                   |
 | **Notes CRUD**       | `DELETE`        | `/notes/:id` _(alias: `/note/:id`)_             | Authenticated (`user` / `admin`) | Soft-delete note (User: own; Admin: any)                              |
 | **Aggregations**     | `GET`           | `/user/interests` _(alias: `/users/interests`)_ | Authenticated (`user` / `admin`) | **Scenario 1**: Group active users by interests using native pipeline |
 | **Aggregations**     | `GET`           | `/user/:id/notes` _(alias: `/notes/user/:id`)_  | Authenticated (Own / Admin)      | **Scenario 2**: Retrieve user's notes via `$lookup` with pagination   |
-| **Admin Management** | `GET`           | `/user` _(alias: `/users`)_                     | Admin Only (`role: "admin"`)     | Paginated list of all users with deterministic sort                   |
+| **Admin Management** | `GET`           | `/user` _(aliases: `/users`, `/user/filter`, `/users/filter`)_ | Admin Only (`role: "admin"`)     | List & filter users (paginated, role filter, case-insensitive search by name/email) |
 | **Admin Management** | `POST`          | `/user` _(alias: `/users`)_                     | Admin Only (`role: "admin"`)     | Create a new user with specified role                                 |
 | **Admin Management** | `GET`           | `/user/:id` _(alias: `/users/:id`)_             | Admin Only (`role: "admin"`)     | Retrieve individual user record by ID                                 |
 | **Admin Management** | `PATCH` / `PUT` | `/user/:id` _(alias: `/users/:id`)_             | Admin Only (`role: "admin"`)     | Update user fields (`name`, `role`, `interests`)                      |
@@ -132,7 +132,7 @@ All responses follow a consistent standard response wrapper:
    - [Update Authenticated Profile](#b-update-authenticated-profile)
 3. [Notes Endpoints (`/notes/*` and `/note/*`)](#3-notes-endpoints)
    - [Create a Note](#a-create-a-note)
-   - [Get Notes (Paginated)](#b-get-notes-paginated)
+   - [Get & Search Notes (Paginated, Title Search)](#b-get--search-notes-paginated-title-search)
    - [Get Single Note](#c-get-single-note)
    - [Update a Note](#d-update-a-note)
    - [Delete a Note](#e-delete-a-note)
@@ -140,7 +140,7 @@ All responses follow a consistent standard response wrapper:
    - [Scenario 1: Group Users by Interests (`GET /user/interests`)](#a-group-users-by-interests-aggregation-scenario-1)
    - [Scenario 2: Retrieve User Notes via `$lookup` (`GET /user/:id/notes`)](#b-retrieve-users-notes-via-lookup-aggregation-scenario-2)
 5. [Admin User Management Endpoints (`/user/*` and `/users/*`)](#5-admin-user-management-endpoints)
-   - [List All Users (Paginated)](#a-list-all-users-paginated)
+   - [List & Filter Users (Paginated, Role Filter, Search)](#a-list--filter-users-paginated-role-filter-search)
    - [Create User with Role](#b-create-user)
    - [Get User by ID](#c-get-user-by-id)
    - [Update User](#d-update-user)
@@ -377,26 +377,56 @@ Creates a new note automatically associated with the authenticated user.
 
 ---
 
-#### B. Get Notes (Paginated)
+#### B. Get & Search Notes (Paginated, Title Search)
 
-Retrieves a paginated list of notes sorted deterministically by newest first (`createdAt: -1, _id: -1`).
+Retrieves a paginated list of notes sorted deterministically by newest first (`createdAt: -1, _id: -1`), with optional case-insensitive title keyword search for both regular users and administrators on the **same endpoint**.
 
-- **Regular Users**: Returns only notes authored by the current user.
-- **Administrators**: Returns notes across all users, with optional filtering by author (`?author=<userId>`).
+- **Regular Users**: Searches and returns only notes authored by the current user. Scoping to own notes is strictly enforced server-side (cannot bypass via query params).
+- **Administrators**: Searches across notes of all users system-wide, with optional author scoping (`?author=<userId>`).
 
-- **Route**: `/notes` (or `/note`)
+- **Route**: `/notes` (or `/note`, `/notes/search`, `/note/search`)
 - **Method**: `GET`
 - **Authentication**: Required (`accessToken` cookie)
 - **Query Parameters**:
-  - `page` (optional, integer, min 1, default: `1`)
-  - `limit` (optional, integer, min 1, max 100, default: `10`)
-  - `author` (optional, admin only, valid MongoDB ObjectId string)
-- **Example Request**: `GET /notes?page=1&limit=10`
+  - `page` (optional, integer, min 1, default: `1`): Page number for pagination.
+  - `limit` (optional, integer, min 1, max 100, default: `10`): Number of notes per page.
+  - `title` (optional, string): Case-insensitive keyword search matching against note `title`. Special regex characters are safely escaped to prevent regex injection.
+  - `searchQ` (optional, string): Alias for `title` search query.
+  - `search` (optional, string): Alternative query alias for title search.
+  - `author` (optional, admin only, valid MongoDB ObjectId string): Filter notes by a specific author. Ignored for regular users.
 - **Request Headers**:
 
   ```http
   Cookie: accessToken=<jwt_token>
   ```
+
+##### Query Examples
+
+1. **Standard Paginated Notes**:
+   ```http
+   GET /notes?page=1&limit=10
+   ```
+
+2. **Case-Insensitive Title Search (Regular User or Admin)**:
+   ```http
+   GET /notes?title=architecture
+   ```
+   Matches "Architecture Overview", "ARCHITECTURE PLAN", or any note whose title contains "architecture" (User: within own notes; Admin: system-wide).
+
+3. **Title Search via `searchQ`**:
+   ```http
+   GET /notes?searchQ=meeting
+   ```
+
+4. **Admin Title Search Scoped to Specific Author**:
+   ```http
+   GET /notes?author=6717540f8a846f499b95143a&title=roadmap&page=1&limit=10
+   ```
+
+5. **Search Endpoint Alias**:
+   ```http
+   GET /notes/search?title=design
+   ```
 
 - **Response (`200 OK`)**:
 
@@ -648,20 +678,47 @@ Retrieves a specified user's notes using a single MongoDB aggregation pipeline w
 
 All admin endpoints require an authenticated user with `role: "admin"` verified via the `accessToken` cookie.
 
-#### A. List All Users (Paginated)
+#### A. List & Filter Users (Paginated, Role Filter, Search)
 
-Retrieves a paginated list of all active users, sorted deterministically by newest first (`createdAt: -1, _id: -1`). Passwords and internal flags are omitted.
+Retrieves a paginated list of active users, with optional filtering by role and case-insensitive keyword search matching user `name` or `email`. Users are sorted deterministically by newest first (`createdAt: -1, _id: -1`). Passwords and internal flags are omitted.
 
-- **Route**: `/user` (or `/users`)
+- **Route**: `/user` (or `/users`, `/user/filter`, `/users/filter`)
 - **Method**: `GET`
 - **Authentication**: Admin Required (`accessToken` cookie)
 - **Query Parameters**:
-  - `page` (optional, integer, min 1, default: `1`)
-  - `limit` (optional, integer, min 1, max 100, default: `10`)
+  - `page` (optional, integer, min 1, default: `1`): Page number for pagination.
+  - `limit` (optional, integer, min 1, max 100, default: `10`): Number of users per page.
+  - `role` (optional, string: `"admin"`, `"user"`, or `"all"`): Filter by user role. Case-insensitive (e.g. `role=admin`). When omitted or set to `"all"`, all user roles are included.
+  - `searchQ` (optional, string): Case-insensitive search query matching against `name` OR `email`. Special regex characters are safely escaped to prevent regex injection.
+  - `search` (optional, string): Alias for `searchQ`.
 - **Request Headers**:
   ```http
   Cookie: accessToken=<jwt_admin_token>
   ```
+
+##### Query Examples
+
+1. **Standard Paginated List**:
+   ```http
+   GET /users?page=1&limit=10
+   ```
+
+2. **Filter by Role**:
+   ```http
+   GET /users?role=admin
+   ```
+
+3. **Case-Insensitive Search by Name or Email**:
+   ```http
+   GET /users?searchQ=alice
+   ```
+   Matches "Alice Smith", "ALICE", or "alice@example.com".
+
+4. **Combined Role Filter and Search Query (Dedicated Filter Route)**:
+   ```http
+   GET /user/filter?role=user&searchQ=gmail.com&page=1&limit=10
+   ```
+
 - **Response (`200 OK`)**:
   ```json
   {
@@ -688,7 +745,7 @@ Retrieves a paginated list of all active users, sorted deterministically by newe
   }
   ```
 - **Error Responses**:
-  - `400 Bad Request`: Invalid pagination parameters.
+  - `400 Bad Request`: Invalid pagination parameters or invalid role filter (`role` must be 'admin', 'user', or 'all').
   - `401 Unauthorized`: Missing or invalid authentication cookie.
   - `403 Forbidden`: Access forbidden (user is not an admin).
 
@@ -862,13 +919,13 @@ Soft-deletes a user (`isDeleted: true`). To maintain data integrity and prevent 
 | `GET`           | `/user/interests` (or `/users/interests`) | Authenticated               | None                                                 | **Aggregation 1**: Group users by interests          |
 | `GET`           | `/user/:id/notes`                         | Authenticated (Own / Admin) | Query: `?page=1&limit=10`                            | **Aggregation 2**: Retrieve user notes via `$lookup` |
 | `GET`           | `/notes/user/:id`                         | Authenticated (Own / Admin) | Query: `?page=1&limit=10`                            | Alias for `$lookup` user notes retrieval             |
-| `GET`           | `/user` (or `/users`)                     | Admin Only                  | Query: `?page=1&limit=10`                            | List all users (paginated, deterministic sort)       |
+| `GET`           | `/user` (or `/users`, `/user/filter`, `/users/filter`) | Admin Only                  | Query: `?page=1&limit=10&role=user&searchQ=alice`    | List & filter users (role filter, case-insensitive search by name/email) |
 | `POST`          | `/user` (or `/users`)                     | Admin Only                  | Body: `{ name, email, password, role?, interests? }` | Admin creates user with specified role               |
 | `GET`           | `/user/:id` (or `/users/:id`)             | Admin Only                  | None                                                 | Retrieve user by ID                                  |
 | `PATCH` / `PUT` | `/user/:id` (or `/users/:id`)             | Admin Only                  | Body: `{ name?, role?, interests? }`                 | Admin updates user fields                            |
 | `DELETE`        | `/user/:id` (or `/users/:id`)             | Admin Only                  | None                                                 | Soft-delete user & cascade delete their notes        |
 | `POST`          | `/notes` (or `/note`)                     | Authenticated               | Body: `{ title, content }`                           | Create a new note                                    |
-| `GET`           | `/notes` (or `/note`)                     | Authenticated               | Query: `?page=1&limit=10` (`&author=` for admin)     | Get paginated list of notes (User: own; Admin: all)  |
+| `GET`           | `/notes` (or `/note`, `/notes/search`, `/note/search`) | Authenticated               | Query: `?page=1&limit=10&title=work` (`&author=` for admin) | Get & search notes by title (case-insensitive; User: own; Admin: all) |
 | `GET`           | `/notes/:id` (or `/note/:id`)             | Authenticated (Own / Admin) | None                                                 | Get single note by ID                                |
 | `PATCH` / `PUT` | `/notes/:id` (or `/note/:id`)             | Authenticated (Own / Admin) | Body: `{ title?, content? }`                         | Update note title and/or content                     |
 | `DELETE`        | `/notes/:id` (or `/note/:id`)             | Authenticated (Own / Admin) | None                                                 | Soft-delete a note                                   |

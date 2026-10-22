@@ -38,7 +38,12 @@ export class NoteService {
   public static async getNotes(
     currentUser: authPayload,
     pagination: { page: number; limit: number },
-    queryFilter?: { author?: string },
+    queryFilter?: {
+      author?: string;
+      title?: string;
+      searchQ?: string;
+      search?: string;
+    },
   ) {
     const { page, limit } = pagination;
     const skip = (page - 1) * limit;
@@ -56,6 +61,17 @@ export class NoteService {
     } else {
       // Regular users are strictly scoped to their own notes (cannot bypass via query params)
       filter.author = new mongoose.Types.ObjectId(currentUser.id);
+    }
+
+    // Case-insensitive title search (applied for both admin and regular user)
+    const rawSearch =
+      queryFilter?.title || queryFilter?.searchQ || queryFilter?.search;
+    if (rawSearch && typeof rawSearch === "string") {
+      const titleSearch = rawSearch.trim();
+      if (titleSearch.length > 0) {
+        const escaped = titleSearch.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        filter.title = { $regex: escaped, $options: "i" };
+      }
     }
 
     const [totalData, notes] = await Promise.all([
@@ -79,10 +95,12 @@ export class NoteService {
   public static getMyNotes(
     userId: string,
     pagination: { page: number; limit: number },
+    queryFilter?: { title?: string; searchQ?: string; search?: string },
   ) {
     return NoteService.getNotes(
       { id: userId, role: "user", email: "", name: "" },
       pagination,
+      queryFilter,
     );
   }
 

@@ -25,23 +25,23 @@ export class NoteHandler {
       throw apiError(httpStatus.UNAUTHORIZED, "Authentication token required");
     }
 
-    const queryResult = noteValidation.paginationValidation.safeParse(req.query);
+    const queryResult =
+      noteValidation.getNotesQueryValidation.safeParse(req.query);
     if (!queryResult.success) {
       const formattedErrors = queryResult.error.format();
       const { _errors, ...fieldErrors } = formattedErrors;
       return SendError(res, httpStatus.BAD_REQUEST, {
-        message: "Invalid pagination parameters",
+        message: "Invalid query parameters",
         data: fieldErrors,
       });
     }
 
-    const { page, limit } = queryResult.data;
-    const author = req.query.author as string | undefined;
+    const { page, limit, author, title, searchQ, search } = queryResult.data;
 
     const result = await NoteService.getNotes(
       currentUser,
       { page, limit },
-      author ? { author } : undefined,
+      { author, title, searchQ, search },
     );
 
     return SendSuccess(res, httpStatus.OK, {

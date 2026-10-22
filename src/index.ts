@@ -19,7 +19,12 @@ app.use(
   }),
 );
 app.get("/health", (req, res) => {
-  res.send("OK");
+  res.json({
+    message: "OK",
+    status: "success",
+    statusCode: 200,
+    origin: env.CLIENT_URL,
+  });
 });
 app.use(cookieParser());
 app.use(express.json());
